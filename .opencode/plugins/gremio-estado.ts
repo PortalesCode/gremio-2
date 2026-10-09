@@ -95,7 +95,7 @@ export default {
           if (web.es && !devtoolsOn) {
             avisos.push(
               "Es una web app y Chrome DevTools está apagado: preguntale al usuario si quiere encenderlo " +
-                "para verificación visual (QA). Si acepta, es tarea directa de DevOps; recordá al final: reiniciar OpenCode.",
+                "para verificación visual (QA). Si acepta, es tarea directa de DevOps; los MCPs se reconectan en caliente, no hace falta reiniciar.",
             );
           }
           if (esGit && commits && !base.tests) {

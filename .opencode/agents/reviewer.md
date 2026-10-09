@@ -1,45 +1,112 @@
 ---
 description: Reviewer — revisor de código del Gremio 2. Busca bugs, riesgos y seguridad. Emite veredicto bloqueante o aprobado. No modifica código.
 mode: subagent
-permission:
-  edit:
-    "*": deny
-    "*board/*": allow
-  bash:
-    "*": deny
-    "git status*": allow
-    "git diff*": allow
-    "git log*": allow
-    "git show*": allow
-    "ls*": allow
-    "cat*": allow
-    "rg*": allow
-    "grep*": allow
-    "find*": allow
-    "wc*": allow
-    "head*": allow
-    "npm test*": allow
-    "npm run lint*": allow
-    "npx vitest*": allow
-    "npx tsc*": allow
-    "pytest*": allow
-    "ruff*": allow
-    "mypy*": allow
-    "go test*": allow
-    "cargo test*": allow
-    "cargo check*": allow
-    "*> *": deny
-    "*>> *": deny
-    "rm*": deny
-    "sudo*": deny
-  read: allow
-  question: deny
-  task: deny
-  gremio_estado: deny
-  skill:
-    "*": deny
-    "code-review": allow
-    "git-workflow": allow
+permissions:
+  - action: 'edit'
+    resource: '*'
+    effect: deny
+  - action: 'edit'
+    resource: 'board/*'
+    effect: allow
+  - action: 'shell'
+    resource: '*'
+    effect: deny
+  - action: 'shell'
+    resource: 'git status *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git diff *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git log *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git show *'
+    effect: allow
+  - action: 'shell'
+    resource: 'ls *'
+    effect: allow
+  - action: 'shell'
+    resource: 'cat *'
+    effect: allow
+  - action: 'shell'
+    resource: 'rg *'
+    effect: allow
+  - action: 'shell'
+    resource: 'grep *'
+    effect: allow
+  - action: 'shell'
+    resource: 'find *'
+    effect: allow
+  - action: 'shell'
+    resource: 'wc *'
+    effect: allow
+  - action: 'shell'
+    resource: 'head *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm run lint *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npx vitest *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npx tsc *'
+    effect: allow
+  - action: 'shell'
+    resource: 'pytest *'
+    effect: allow
+  - action: 'shell'
+    resource: 'ruff *'
+    effect: allow
+  - action: 'shell'
+    resource: 'mypy *'
+    effect: allow
+  - action: 'shell'
+    resource: 'go test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'cargo test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'cargo check *'
+    effect: allow
+  - action: 'shell'
+    resource: '*> *'
+    effect: deny
+  - action: 'shell'
+    resource: '*>> *'
+    effect: deny
+  - action: 'shell'
+    resource: 'rm *'
+    effect: deny
+  - action: 'shell'
+    resource: 'sudo *'
+    effect: deny
+  - action: 'read'
+    resource: '*'
+    effect: allow
+  - action: 'question'
+    resource: '*'
+    effect: deny
+  - action: 'subagent'
+    resource: '*'
+    effect: deny
+  - action: 'gremio_estado'
+    resource: '*'
+    effect: deny
+  - action: 'skill'
+    resource: '*'
+    effect: deny
+  - action: 'skill'
+    resource: 'code-review'
+    effect: allow
+  - action: 'skill'
+    resource: 'git-workflow'
+    effect: allow
 ---
 
 # Reviewer — Code Review

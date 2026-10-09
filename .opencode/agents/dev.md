@@ -1,67 +1,178 @@
 ---
 description: Dev — implementador del Gremio 2. Escribe código y tests. No decide arquitectura ni cierra su propio trabajo.
 mode: subagent
-permission:
-  edit:
-    "*": allow
-    "*.opencode/*": deny
-    "*AGENTS.md": deny
-    "*opencode.json": deny
-  bash:
-    "*": deny
-    "ls*": allow
-    "cat*": allow
-    "rg*": allow
-    "grep*": allow
-    "find*": allow
-    "head*": allow
-    "tail*": allow
-    "wc*": allow
-    "git status*": allow
-    "git diff*": allow
-    "git log*": allow
-    "git show*": allow
-    "git add*": allow
-    "git commit*": allow
-    "git checkout -b *": allow
-    "git switch -c *": allow
-    "git stash*": allow
-    "npm test*": allow
-    "npm run test*": allow
-    "npm run lint*": allow
-    "npm run typecheck*": allow
-    "npm run build*": allow
-    "npx vitest*": allow
-    "npx tsc*": allow
-    "pnpm test*": allow
-    "pnpm run test*": allow
-    "yarn test*": allow
-    "pytest*": allow
-    "ruff*": allow
-    "mypy*": allow
-    "go test*": allow
-    "go build*": allow
-    "cargo test*": allow
-    "cargo check*": allow
-    "git push*": deny
-    "*> *": deny
-    "*>> *": deny
-    "*| sh*": deny
-    "*| bash*": deny
-    "rm*": deny
-    "sudo*": deny
-    "curl*": deny
-    "wget*": deny
-  read: allow
-  question: deny
-  task: deny
-  gremio_estado: deny
-  skill:
-    "*": deny
-    "implement": allow
-    "debug": allow
-    "git-workflow": allow
-    "test-setup": allow
+permissions:
+  - action: 'edit'
+    resource: '*'
+    effect: allow
+  - action: 'edit'
+    resource: '.opencode/*'
+    effect: deny
+  - action: 'edit'
+    resource: '*AGENTS.md'
+    effect: deny
+  - action: 'edit'
+    resource: '*opencode.json'
+    effect: deny
+  - action: 'shell'
+    resource: '*'
+    effect: deny
+  - action: 'shell'
+    resource: 'ls *'
+    effect: allow
+  - action: 'shell'
+    resource: 'cat *'
+    effect: allow
+  - action: 'shell'
+    resource: 'rg *'
+    effect: allow
+  - action: 'shell'
+    resource: 'grep *'
+    effect: allow
+  - action: 'shell'
+    resource: 'find *'
+    effect: allow
+  - action: 'shell'
+    resource: 'head *'
+    effect: allow
+  - action: 'shell'
+    resource: 'tail *'
+    effect: allow
+  - action: 'shell'
+    resource: 'wc *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git status *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git diff *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git log *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git show *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git add *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git commit *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git checkout -b *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git switch -c *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git stash *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm run test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm run lint *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm run typecheck *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm run build *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npx vitest *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npx tsc *'
+    effect: allow
+  - action: 'shell'
+    resource: 'pnpm test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'pnpm run test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'yarn test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'pytest *'
+    effect: allow
+  - action: 'shell'
+    resource: 'ruff *'
+    effect: allow
+  - action: 'shell'
+    resource: 'mypy *'
+    effect: allow
+  - action: 'shell'
+    resource: 'go test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'go build *'
+    effect: allow
+  - action: 'shell'
+    resource: 'cargo test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'cargo check *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git push *'
+    effect: deny
+  - action: 'shell'
+    resource: '*> *'
+    effect: deny
+  - action: 'shell'
+    resource: '*>> *'
+    effect: deny
+  - action: 'shell'
+    resource: '*| sh*'
+    effect: deny
+  - action: 'shell'
+    resource: '*| bash*'
+    effect: deny
+  - action: 'shell'
+    resource: 'rm *'
+    effect: deny
+  - action: 'shell'
+    resource: 'sudo *'
+    effect: deny
+  - action: 'shell'
+    resource: 'curl *'
+    effect: deny
+  - action: 'shell'
+    resource: 'wget *'
+    effect: deny
+  - action: 'read'
+    resource: '*'
+    effect: allow
+  - action: 'question'
+    resource: '*'
+    effect: deny
+  - action: 'subagent'
+    resource: '*'
+    effect: deny
+  - action: 'gremio_estado'
+    resource: '*'
+    effect: deny
+  - action: 'skill'
+    resource: '*'
+    effect: deny
+  - action: 'skill'
+    resource: 'implement'
+    effect: allow
+  - action: 'skill'
+    resource: 'debug'
+    effect: allow
+  - action: 'skill'
+    resource: 'git-workflow'
+    effect: allow
+  - action: 'skill'
+    resource: 'test-setup'
+    effect: allow
 ---
 
 # Dev — Implementador

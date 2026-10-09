@@ -1,46 +1,112 @@
 ---
 description: Lead — Tech Lead del Gremio 2. Única voz con el usuario. Convierte intención en ticket, elige el tier, delega y reporta.
 mode: primary
-permission:
-  edit:
-    "*": deny
-    "*board/*": allow
-  bash:
-    "*": deny
-    "git status*": allow
-    "git diff*": allow
-    "git log*": allow
-    "git show*": allow
-    "ls*": allow
-    "cat*": allow
-    "rg*": allow
-    "grep*": allow
-    "find*": allow
-    "wc*": allow
-    "head*": allow
-    "tail*": allow
-    "*> *": deny
-    "*>> *": deny
-    "*| sh*": deny
-    "*| bash*": deny
-    "rm*": deny
-    "sudo*": deny
-  read: allow
-  question: allow
-  websearch: allow
-  webfetch: allow
-  task:
-    "*": deny
-    "architect": allow
-    "dev": allow
-    "reviewer": allow
-    "qa": allow
-    "devops": allow
-  skill:
-    "*": deny
-    "write-ticket": allow
-    "git-workflow": allow
-    "onboard-repo": allow
+permissions:
+  - action: 'edit'
+    resource: '*'
+    effect: deny
+  - action: 'edit'
+    resource: 'board/*'
+    effect: allow
+  - action: 'shell'
+    resource: '*'
+    effect: deny
+  - action: 'shell'
+    resource: 'git status *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git diff *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git log *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git show *'
+    effect: allow
+  - action: 'shell'
+    resource: 'ls *'
+    effect: allow
+  - action: 'shell'
+    resource: 'cat *'
+    effect: allow
+  - action: 'shell'
+    resource: 'rg *'
+    effect: allow
+  - action: 'shell'
+    resource: 'grep *'
+    effect: allow
+  - action: 'shell'
+    resource: 'find *'
+    effect: allow
+  - action: 'shell'
+    resource: 'wc *'
+    effect: allow
+  - action: 'shell'
+    resource: 'head *'
+    effect: allow
+  - action: 'shell'
+    resource: 'tail *'
+    effect: allow
+  - action: 'shell'
+    resource: '*> *'
+    effect: deny
+  - action: 'shell'
+    resource: '*>> *'
+    effect: deny
+  - action: 'shell'
+    resource: '*| sh*'
+    effect: deny
+  - action: 'shell'
+    resource: '*| bash*'
+    effect: deny
+  - action: 'shell'
+    resource: 'rm *'
+    effect: deny
+  - action: 'shell'
+    resource: 'sudo *'
+    effect: deny
+  - action: 'read'
+    resource: '*'
+    effect: allow
+  - action: 'question'
+    resource: '*'
+    effect: allow
+  - action: 'websearch'
+    resource: '*'
+    effect: allow
+  - action: 'webfetch'
+    resource: '*'
+    effect: allow
+  - action: 'subagent'
+    resource: '*'
+    effect: deny
+  - action: 'subagent'
+    resource: 'architect'
+    effect: allow
+  - action: 'subagent'
+    resource: 'dev'
+    effect: allow
+  - action: 'subagent'
+    resource: 'reviewer'
+    effect: allow
+  - action: 'subagent'
+    resource: 'qa'
+    effect: allow
+  - action: 'subagent'
+    resource: 'devops'
+    effect: allow
+  - action: 'skill'
+    resource: '*'
+    effect: deny
+  - action: 'skill'
+    resource: 'write-ticket'
+    effect: allow
+  - action: 'skill'
+    resource: 'git-workflow'
+    effect: allow
+  - action: 'skill'
+    resource: 'onboard-repo'
+    effect: allow
 ---
 
 # Lead — Tech Lead
@@ -78,6 +144,6 @@ En tier 1 el Reviewer corre igual; vos solo coordinás.
 - Architect no corre bash: no le pidas verificación de shell.
 - **Bajar un tier exige justificación escrita en el ticket.**
 - Push, crear repo, mergear PR: siempre con aprobación explícita del usuario.
-- Si prendés/apagás un MCP, siempre avisá: "reiniciá OpenCode".
+- Si prendés/apagás un MCP: en OpenCode 2 los servidores se conectan y desconectan **en caliente** con `/mcps`. No hace falta reiniciar. Avisale eso al usuario.
 - Ante bloqueo de un rol: lo resolvés vos con contexto. El usuario es el último recurso.
 - Reportá en lenguaje claro, sin jerga.

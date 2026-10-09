@@ -1,63 +1,166 @@
 ---
 description: DevOps — infraestructura, git y entrega del Gremio 2. Setup del repo, ramas y PRs, CI/CD, deploy y rollback.
 mode: subagent
-permission:
-  edit:
-    "*": allow
-    "*.opencode/*": deny
-    "*AGENTS.md": deny
-  bash:
-    "*": deny
-    "ls*": allow
-    "cat*": allow
-    "rg*": allow
-    "grep*": allow
-    "find*": allow
-    "head*": allow
-    "tail*": allow
-    "wc*": allow
-    "git status*": allow
-    "git diff*": allow
-    "git log*": allow
-    "git show*": allow
-    "git add*": allow
-    "git commit*": allow
-    "git branch*": allow
-    "git checkout*": allow
-    "git switch*": allow
-    "git stash*": allow
-    "git merge*": allow
-    "git fetch*": allow
-    "git init*": allow
-    "git remote*": allow
-    "git config*": allow
-    "git push*": ask
-    "git push --force*": deny
-    "npm test*": allow
-    "npm ci*": allow
-    "npm install*": ask
-    "npm run*": allow
-    "npx vitest*": allow
-    "gh pr create*": ask
-    "gh pr merge*": ask
-    "gh repo create*": ask
-    "*> *": deny
-    "*>> *": deny
-    "*| sh*": deny
-    "*| bash*": deny
-    "rm*": deny
-    "sudo*": deny
-    "curl*": ask
-    "wget*": ask
-  read: allow
-  question: deny
-  task: deny
-  skill:
-    "*": deny
-    "ship": allow
-    "git-workflow": allow
-    "project-setup": allow
-    "ci-setup": allow
+permissions:
+  - action: 'edit'
+    resource: '*'
+    effect: allow
+  - action: 'edit'
+    resource: '.opencode/*'
+    effect: deny
+  - action: 'edit'
+    resource: '*AGENTS.md'
+    effect: deny
+  - action: 'shell'
+    resource: '*'
+    effect: deny
+  - action: 'shell'
+    resource: 'ls *'
+    effect: allow
+  - action: 'shell'
+    resource: 'cat *'
+    effect: allow
+  - action: 'shell'
+    resource: 'rg *'
+    effect: allow
+  - action: 'shell'
+    resource: 'grep *'
+    effect: allow
+  - action: 'shell'
+    resource: 'find *'
+    effect: allow
+  - action: 'shell'
+    resource: 'head *'
+    effect: allow
+  - action: 'shell'
+    resource: 'tail *'
+    effect: allow
+  - action: 'shell'
+    resource: 'wc *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git status *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git diff *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git log *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git show *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git add *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git commit *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git branch *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git checkout *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git switch *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git stash *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git merge *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git fetch *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git init *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git remote *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git config *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git push *'
+    effect: ask
+  - action: 'shell'
+    resource: 'git push --force *'
+    effect: deny
+  - action: 'shell'
+    resource: 'npm test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm ci *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm install *'
+    effect: ask
+  - action: 'shell'
+    resource: 'npm run *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npx vitest *'
+    effect: allow
+  - action: 'shell'
+    resource: 'gh pr create *'
+    effect: ask
+  - action: 'shell'
+    resource: 'gh pr merge *'
+    effect: ask
+  - action: 'shell'
+    resource: 'gh repo create *'
+    effect: ask
+  - action: 'shell'
+    resource: '*> *'
+    effect: deny
+  - action: 'shell'
+    resource: '*>> *'
+    effect: deny
+  - action: 'shell'
+    resource: '*| sh*'
+    effect: deny
+  - action: 'shell'
+    resource: '*| bash*'
+    effect: deny
+  - action: 'shell'
+    resource: 'rm *'
+    effect: deny
+  - action: 'shell'
+    resource: 'sudo *'
+    effect: deny
+  - action: 'shell'
+    resource: 'curl *'
+    effect: ask
+  - action: 'shell'
+    resource: 'wget *'
+    effect: ask
+  - action: 'read'
+    resource: '*'
+    effect: allow
+  - action: 'question'
+    resource: '*'
+    effect: deny
+  - action: 'subagent'
+    resource: '*'
+    effect: deny
+  - action: 'skill'
+    resource: '*'
+    effect: deny
+  - action: 'skill'
+    resource: 'ship'
+    effect: allow
+  - action: 'skill'
+    resource: 'git-workflow'
+    effect: allow
+  - action: 'skill'
+    resource: 'project-setup'
+    effect: allow
+  - action: 'skill'
+    resource: 'ci-setup'
+    effect: allow
 ---
 
 # DevOps — Infra, Git y Entrega

@@ -1,49 +1,124 @@
 ---
 description: QA — verificación del Gremio 2. Escribe y corre tests, cubre edge cases y confirma o rechaza el Definition of Done. Gate final.
 mode: subagent
-permission:
-  edit:
-    "*": allow
-    "*.opencode/*": deny
-    "*AGENTS.md": deny
-    "*opencode.json": deny
-  bash:
-    "*": deny
-    "ls*": allow
-    "cat*": allow
-    "rg*": allow
-    "grep*": allow
-    "find*": allow
-    "head*": allow
-    "tail*": allow
-    "git status*": allow
-    "git diff*": allow
-    "npm test*": allow
-    "npm run test*": allow
-    "npm run lint*": allow
-    "npm run typecheck*": allow
-    "npx vitest*": allow
-    "npx tsc*": allow
-    "pnpm test*": allow
-    "yarn test*": allow
-    "pytest*": allow
-    "ruff*": allow
-    "mypy*": allow
-    "go test*": allow
-    "cargo test*": allow
-    "*> *": deny
-    "*>> *": deny
-    "rm*": deny
-    "sudo*": deny
-  read: allow
-  question: deny
-  task: deny
-  gremio_estado: deny
-  "chrome-devtools*": allow
-  "playwright*": allow
-  skill:
-    "*": deny
-    "test-and-verify": allow
+permissions:
+  - action: 'edit'
+    resource: '*'
+    effect: allow
+  - action: 'edit'
+    resource: '.opencode/*'
+    effect: deny
+  - action: 'edit'
+    resource: '*AGENTS.md'
+    effect: deny
+  - action: 'edit'
+    resource: '*opencode.json'
+    effect: deny
+  - action: 'shell'
+    resource: '*'
+    effect: deny
+  - action: 'shell'
+    resource: 'ls *'
+    effect: allow
+  - action: 'shell'
+    resource: 'cat *'
+    effect: allow
+  - action: 'shell'
+    resource: 'rg *'
+    effect: allow
+  - action: 'shell'
+    resource: 'grep *'
+    effect: allow
+  - action: 'shell'
+    resource: 'find *'
+    effect: allow
+  - action: 'shell'
+    resource: 'head *'
+    effect: allow
+  - action: 'shell'
+    resource: 'tail *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git status *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git diff *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm run test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm run lint *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm run typecheck *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npx vitest *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npx tsc *'
+    effect: allow
+  - action: 'shell'
+    resource: 'pnpm test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'yarn test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'pytest *'
+    effect: allow
+  - action: 'shell'
+    resource: 'ruff *'
+    effect: allow
+  - action: 'shell'
+    resource: 'mypy *'
+    effect: allow
+  - action: 'shell'
+    resource: 'go test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'cargo test *'
+    effect: allow
+  - action: 'shell'
+    resource: '*> *'
+    effect: deny
+  - action: 'shell'
+    resource: '*>> *'
+    effect: deny
+  - action: 'shell'
+    resource: 'rm *'
+    effect: deny
+  - action: 'shell'
+    resource: 'sudo *'
+    effect: deny
+  - action: 'read'
+    resource: '*'
+    effect: allow
+  - action: 'question'
+    resource: '*'
+    effect: deny
+  - action: 'subagent'
+    resource: '*'
+    effect: deny
+  - action: 'gremio_estado'
+    resource: '*'
+    effect: deny
+  - action: 'chrome-devtools_*'
+    resource: '*'
+    effect: allow
+  - action: 'playwright_*'
+    resource: '*'
+    effect: allow
+  - action: 'skill'
+    resource: '*'
+    effect: deny
+  - action: 'skill'
+    resource: 'test-and-verify'
+    effect: allow
 ---
 
 # QA — Verificación

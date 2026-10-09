@@ -31,40 +31,58 @@ Medidos sobre el repo, bytes de los archivos de prompt:
 
 | | Gremio 1 | Gremio 2 | |
 |---|---|---|---|
-| **Contexto fijo por request** (`GREMIO.md` + Lead) | 11.1 KB | **6.9 KB** | **−38%** |
+| **Contexto fijo por request** (`GREMIO.md` + Lead) | 11.1 KB | **8.5 KB** | **−23%** |
 | `GREMIO.md` (se inyecta en cada request) | 7.6 KB | **3.9 KB** | −49% |
-| Lead | 3.5 KB | 3.0 KB | −14% |
-| Architect / Reviewer / QA | 1.3–1.5 KB | 1.2–1.9 KB | — |
-| **Dev / DevOps** (llevan allowlist de bash) | 1.5 / 2.2 KB | 2.5 / 2.8 KB | **+15%** |
+| Architect | 1.4 KB | 1.6 KB | +15% |
+| **Reviewer / QA / Dev / DevOps** | 1.3–2.2 KB | 3.3–5.0 KB | **+100–215%** |
 
-El único renglón que sube es el de los roles que escriben código, y sube a propósito: es el costo de un allowlist real de `bash` en vez de `bash: allow`. Se paga **una vez por spawn**, no en cada request. El contexto fijo —lo que se paga siempre— baja 38%.
+**Por qué los roles suben tanto, y por qué no lo bajamos.** En OpenCode v2 los permisos son un array de `{action, resource, effect}`: cada regla ocupa tres líneas donde el objeto de v1 ocupaba una. Un allowlist real de `shell` es caro en bytes.
+
+Podríamos recortarlo —`git *` allow cubre diez reglas— pero abriría permisos que hoy están cerrados (`git reset --hard`, `npm run deploy`). **Preferimos −23% con límites que se sostienen que −38% con límites rotos.** Y el allowlist se paga una vez por spawn, no en cada request: el contexto que se paga siempre es el de la tabla de arriba.
+
+Gremio 1 announcement sus cifras de contexto sobre el formato de permisos de **v1**, que en v2 directamente no aplica.
 
 ## El rediseño de permisos
 
 Gremio 1 tenía un agujero: cuatro de seis roles tenían `bash: allow`, que esquivaba por completo los `deny` de `edit`. Un Reviewer podía no editar código... y editarlo con `sed -i`. La disciplina era prosa, no máquina.
 
-Gremio 2 reemplaza `bash: allow` por un **allowlist con `"*": deny`** como catch-all:
+Gremio 2 reemplaza `bash: allow` por un **allowlist con `"*": deny`** como catch-all.
+
+OpenCode v2 renombró las acciones: `bash` → **`shell`**, `task` → **`subagent`**, y `permission:` (objeto) → **`permissions:`** (array). El orden importa igual: **gana la última regla que matchea**.
 
 ```yaml
-bash:
-  "*": deny
-  "git status*": allow
-  "npm test*": allow
-  "npm ci*": allow
-  "git add*": allow
-  "git push*": deny        # y en DevOps: "ask"
-  "*> *": deny             # ninguna redirección
-  "rm*": deny
-  "sudo*": deny
+permissions:
+  - action: 'shell'
+    resource: '*'
+    effect: deny          # catch-all: lo no listado no corre
+  - action: 'shell'
+    resource: 'git status *'
+    effect: allow
+  - action: 'shell'
+    resource: 'npm test *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git add *'
+    effect: allow
+  - action: 'shell'
+    resource: 'git push *'
+    effect: deny          # en DevOps: ask
+  - action: 'shell'
+    resource: 'rm *'
+    effect: deny
 ```
 
-OpenCode evalúa la última regla que matchea sobre el comando parseado, así que `git status && rm -rf` matchea `git status*` para el primer verbo y cae en `*`: `deny` para el segundo.
+Un patrón que termina en ` *` matchea el comando **con y sin argumentos**: `git status *` cubre `git status` y `git status --short`.
+
+OpenCode evalúa sobre el comando parseado, así que `git status && rm -rf` matchea `git status *` para el primer verbo y cae en el catch-all `deny` para el segundo. Es exactamente el patrón que la documentación recomienda: *allowlist angosto en vez de intentar reconocer cada comando peligroso*.
+
+> **Requiere OpenCode 2.x.** El formato `permission:` de v1 se ignora en v2: los agentes correrían con la policy base `{action: "*", effect: "allow"}`, es decir **sin límites**. Si tenés v1, este repo no te sirve.
 
 Quién puede qué:
 
 | | Lead | Architect | Dev | Reviewer | QA | DevOps |
 |---|---|---|---|---|---|---|
-| `bash` | lectura | **deny** | lectura + tests + git local | lectura + tests | lectura + tests | amplia, con `ask` |
+| `shell` | lectura | **deny** | lectura + tests + git local | lectura + tests | lectura + tests | amplia, con `ask` |
 | `edit` | solo `board/` | solo `board/` | código | **solo `board/`** | solo tests | código |
 | `question` | **allow** | deny | deny | deny | deny | deny |
 
@@ -107,7 +125,7 @@ Tres MCPs vienen encendidos: `context7`, `codegraph`, `sequential-thinking`. Cua
 | `markitdown` | PDFs/Office/HTML a markdown | todos |
 | `headroom` | Optimización de contexto | todos |
 
-Encender uno es cambiar `false` → `true`. Después: **reiniciar OpenCode**. El Lead detecta si tu proyecto es una web app y te pregunta si querés encender DevTools.
+En OpenCode 2 los MCPs se conectan y desconectan **en caliente**:_encender uno es cambiar `"disabled": true` → borrarlo, o usar `/mcps`— y **no hace falta reiniciar**. El Lead detecta si tu proyecto es una web app y te pregunta si querés encender DevTools.
 
 ## Instalación
 
@@ -131,7 +149,7 @@ Qué hace el instalador:
 - Inyecta el documento del equipo en tu `AGENTS.md` entre `<!-- GREMIO2-START -->` y `<!-- GREMIO2-END -->`, sin tocar el resto.
 - Mergea `opencode.json` (MCPs, permisos, `default_agent: lead`) sin pisar tus claves.
 
-Reiniciá OpenCode. Arranca en el **Lead**.
+Reiniciá OpenCode (los agentes, skills y permisos se cargan al inicio) y abrís en el **Lead**.
 
 ## Estructura
 

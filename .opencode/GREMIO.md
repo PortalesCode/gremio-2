@@ -63,7 +63,9 @@ Se cumple por **tier**: los gates de la tabla son el mecanismo, el DoD es el cri
 
 ## MCPs
 
-3 encendidos (`context7`, `codegraph`, `sequential-thinking`). 4 apagados por defecto. `chrome-devtools` y `playwright` solo los ve QA. Encender/apagar es tarea de DevOps (una línea en `opencode.json`) y **siempre** hay que avisar: *"reiniciá OpenCode"*.
+3 encendidos (`context7`, `codegraph`, `sequential-thinking`). 4 apagados por defecto (`disabled: true`). `chrome-devtools` y `playwright` solo los ve QA.
+
+Encender/apagar es tarea de DevOps (una línea en `opencode.json`). **En OpenCode 2 los MCPs se reconectan en caliente**: no reinicies al usuario, decile que ya toma efecto y que `/mcps` muestra el estado.
 
 ## Multi-proyecto
 

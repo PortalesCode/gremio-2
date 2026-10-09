@@ -1,19 +1,37 @@
 ---
 description: Architect — diseñador técnico del Gremio 2. Decide interfaces, tradeoffs y plan de tareas. Produce ADRs.
 mode: subagent
-permission:
-  edit:
-    "*": deny
-    "*board/*": allow
-  bash: deny
-  read: allow
-  question: deny
-  task: deny
-  gremio_estado: deny
-  skill:
-    "*": deny
-    "architecture-review": allow
-    "write-adr": allow
+permissions:
+  - action: 'edit'
+    resource: '*'
+    effect: deny
+  - action: 'edit'
+    resource: 'board/*'
+    effect: allow
+  - action: 'shell'
+    resource: '*'
+    effect: deny
+  - action: 'read'
+    resource: '*'
+    effect: allow
+  - action: 'question'
+    resource: '*'
+    effect: deny
+  - action: 'subagent'
+    resource: '*'
+    effect: deny
+  - action: 'gremio_estado'
+    resource: '*'
+    effect: deny
+  - action: 'skill'
+    resource: '*'
+    effect: deny
+  - action: 'skill'
+    resource: 'architecture-review'
+    effect: allow
+  - action: 'skill'
+    resource: 'write-adr'
+    effect: allow
 ---
 
 # Architect — Diseño Técnico

@@ -194,7 +194,7 @@ open(dst,"w",encoding="utf-8").write(cur)
   fi
 }
 
-# Mergea opencode.json (el proyecto gana en claves existentes).
+# Mergea opencode.json (el proyecto gana en claves existentes). Pensado para OpenCode v2.
 merge_json() {
   local pkg="$1" proj="$2"
   [ -f "$pkg" ] || return 0
@@ -209,18 +209,39 @@ merge_json() {
       const [pkg,proj]=process.argv.slice(1);
       const a=JSON.parse(fs.readFileSync(pkg,"utf8"));
       const b=JSON.parse(fs.readFileSync(proj,"utf8"));
-      b.mcp=Object.assign({},a.mcp||{},b.mcp||{});
-      // Permisos gestionados por el ecosistema: se limpian y se re-aplican (evita denegaciones viejas).
-      const ADMIN=["chrome-devtools","playwright","markitdown","headroom"];
-      const perm={};
-      for(const [k,v] of Object.entries(b.permission||{})){
-        if(!ADMIN.some(p=>k.startsWith(p))) perm[k]=v;
+
+      // OpenCode v2: los MCPs viven bajo mcp.servers y se apagan con "disabled".
+      // Aceptamos el formato v1 (plano bajo mcp) y lo normalizamos, sin perder nada.
+      const CONTROL=new Set(["servers","timeout","experimental"]);
+      const serversOf=(mcp)=>{
+        if(!mcp||typeof mcp!=="object")return {};
+        if(mcp.servers&&typeof mcp.servers==="object")return mcp.servers;
+        const out={};
+        for(const [k,v] of Object.entries(mcp)) if(!CONTROL.has(k)) out[k]=v;
+        return out;
+      };
+      const mcpB=b.mcp||{};
+      const nextMcp={};
+      if(mcpB.timeout!==undefined) nextMcp.timeout=mcpB.timeout;
+      if(mcpB.experimental!==undefined) nextMcp.experimental=mcpB.experimental;
+      nextMcp.servers=Object.assign({},serversOf(a.mcp),serversOf(mcpB));
+      b.mcp=nextMcp;
+
+      // Permisos: en v2 son un ARRAY de {action,resource,effect}.
+      // Las reglas del ecosistema se limpian y se re-aplican (evita denegaciones viejas).
+      const ADMIN=["chrome-devtools_","playwright_"];
+      const limpio=Array.isArray(b.permissions)?b.permissions:[];
+      b.permissions=limpio.filter(r=>!ADMIN.some(p=>String((r&&r.action)||"").startsWith(p)))
+        .concat(Array.isArray(a.permissions)?a.permissions:[]);
+      // El objeto permission: es formato v1 y no tiene efecto en v2: se retira con aviso.
+      if(b.permission&&typeof b.permission==="object"){
+        delete b.permission;
+        process.stderr.write("  aviso: se retiro el permission: (formato v1, sin efecto en OpenCode 2). Ahora van en permissions: []\n");
       }
-      b.permission=Object.assign(perm,a.permission||{});
       if(b.default_agent===undefined&&a.default_agent!==undefined)b.default_agent=a.default_agent;
       if(b.subagent_depth===undefined&&a.subagent_depth!==undefined)b.subagent_depth=a.subagent_depth;
       fs.writeFileSync(proj,JSON.stringify(b,null,2)+"\n");
-      if(b.default_agent&&b.default_agent!=="lead"){process.stderr.write("  aviso: el proyecto define default_agent="+b.default_agent+". Para trabajar con el Gremio 2, cambiá a Lead (Tab) o poné default_agent: lead.\n");}
+      if(b.default_agent&&b.default_agent!=="lead"){process.stderr.write("  aviso: el proyecto define default_agent="+b.default_agent+". Para trabajar con el Gremio 2, cambiala a Lead (Tab) o poné default_agent: lead.\n");}
     ' "$pkg" "$proj"
     ok "opencode.json mergeado"
   elif [ "$tool" = "python3" ]; then
@@ -228,17 +249,34 @@ merge_json() {
 import json,sys
 pkg,proj=sys.argv[1],sys.argv[2]
 a=json.load(open(pkg)); b=json.load(open(proj))
-b["mcp"]=dict(a.get("mcp",{}),**b.get("mcp",{}))
-ADMIN=("chrome-devtools","playwright","markitdown","headroom")
-perm={k:v for k,v in (b.get("permission") or {}).items() if not k.startswith(ADMIN)}
-perm.update(a.get("permission") or {})
-b["permission"]=perm
+
+CONTROL={"servers","timeout","experimental"}
+def servers_of(mcp):
+    if not isinstance(mcp,dict): return {}
+    if isinstance(mcp.get("servers"),dict): return mcp["servers"]
+    return {k:v for k,v in mcp.items() if k not in CONTROL}
+
+mcpB=b.get("mcp") or {}
+next_mcp={}
+if "timeout" in mcpB: next_mcp["timeout"]=mcpB["timeout"]
+if "experimental" in mcpB: next_mcp["experimental"]=mcpB["experimental"]
+next_mcp["servers"]={**servers_of(a.get("mcp")),**servers_of(mcpB)}
+b["mcp"]=next_mcp
+
+ADMIN=("chrome-devtools_","playwright_")
+perm=[r for r in (b.get("permissions") or []) if isinstance(r,dict)
+      and not str(r.get("action","")).startswith(ADMIN)]
+perm+=(a.get("permissions") or [])
+b["permissions"]=perm
+if isinstance(b.get("permission"),dict):
+    del b["permission"]
+    sys.stderr.write("  aviso: se retiro el permission: (formato v1, sin efecto en OpenCode 2). Ahora van en permissions: []\n")
 if "default_agent" not in b and a.get("default_agent") is not None: b["default_agent"]=a["default_agent"]
 if "subagent_depth" not in b and a.get("subagent_depth") is not None: b["subagent_depth"]=a["subagent_depth"]
-json.dump(b,open(proj,"w"),indent=2,ensure_ascii=False); open(proj,"a").write("\n")
-import sys
+with open(proj,"w") as f:
+    json.dump(b,f,indent=2,ensure_ascii=False); f.write("\n")
 da=b.get("default_agent")
-if da and da!="lead": sys.stderr.write("  aviso: el proyecto define default_agent="+str(da)+". Para trabajar con el Gremio, cambiá a Lead (Tab) o poné default_agent: lead.\n")
+if da and da!="lead": sys.stderr.write("  aviso: el proyecto define default_agent="+str(da)+". Para trabajar con el Gremio 2, cambiala a Lead (Tab) o poné default_agent: lead.\n")
 ' "$pkg" "$proj"
     ok "opencode.json mergeado"
   else
