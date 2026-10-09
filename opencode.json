@@ -28,7 +28,7 @@
       },
       "markitdown": {
         "type": "local",
-        "command": ["uvx", "markitdown-mcp@0.0.1a4"],
+        "command": ["uvx", "markitdown-mcp@latest"],
         "disabled": true
       },
       "headroom": {

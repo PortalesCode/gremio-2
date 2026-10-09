@@ -224,8 +224,27 @@ merge_json() {
       const nextMcp={};
       if(mcpB.timeout!==undefined) nextMcp.timeout=mcpB.timeout;
       if(mcpB.experimental!==undefined) nextMcp.experimental=mcpB.experimental;
-      nextMcp.servers=Object.assign({},serversOf(a.mcp),serversOf(mcpB));
+      // Los servidores del ecosistema los manda el PAQUETE (pueden tener fixes:
+      // p.ej. markitdown roto por pydantic). Los del usuario se preservan.
+      const GREMIO=new Set(Object.keys(serversOf(a.mcp)));
+      const propios=serversOf(mcpB);
+      nextMcp.servers=Object.assign({},serversOf(a.mcp));
+      for(const [k,v] of Object.entries(propios)){
+        if(!GREMIO.has(k)) nextMcp.servers[k]=v;
+      }
       b.mcp=nextMcp;
+
+      // v1 -> v2 en el campo: "enabled": false no existe en v2 y se ignora,
+      // dejando el servidor ENCENDIDO. Normalizamos a "disabled": true.
+      let normalizados=[];
+      for(const [k,s] of Object.entries(nextMcp.servers)){
+        if(s&&typeof s==="object"&&s.enabled===false){
+          s.disabled=true; delete s.enabled; normalizados.push(k);
+        }
+      }
+      if(normalizados.length){
+        process.stderr.write("  aviso: MCPs migrados a v2 (enabled:false -> disabled:true): "+normalizados.join(", ")+"\n");
+      }
 
       // Permisos: en v2 son un ARRAY de {action,resource,effect}.
       // Las reglas del ecosistema se limpian y se re-aplican (evita denegaciones viejas).
@@ -260,8 +279,23 @@ mcpB=b.get("mcp") or {}
 next_mcp={}
 if "timeout" in mcpB: next_mcp["timeout"]=mcpB["timeout"]
 if "experimental" in mcpB: next_mcp["experimental"]=mcpB["experimental"]
-next_mcp["servers"]={**servers_of(a.get("mcp")),**servers_of(mcpB)}
+# Los servidores del ecosistema los manda el PAQUETE (pueden traer fixes).
+# Los del usuario se preservan intactos.
+gremio=set(servers_of(a.get("mcp")))
+propios=servers_of(mcpB)
+next_mcp["servers"]={**servers_of(a.get("mcp"))}
+for k,v in propios.items():
+    if k not in gremio: next_mcp["servers"][k]=v
 b["mcp"]=next_mcp
+
+# v1 -> v2 en el campo: "enabled": false no existe en v2 y se ignora,
+# dejando el servidor ENCENDIDO. Normalizamos a "disabled": true.
+normalizados=[]
+for k,srv in next_mcp["servers"].items():
+    if isinstance(srv,dict) and srv.get("enabled") is False:
+        srv["disabled"]=True; del srv["enabled"]; normalizados.append(k)
+if normalizados:
+    sys.stderr.write("  aviso: MCPs migrados a v2 (enabled:false -> disabled:true): "+", ".join(normalizados)+"\n")
 
 ADMIN=("chrome-devtools_","playwright_")
 perm=[r for r in (b.get("permissions") or []) if isinstance(r,dict)

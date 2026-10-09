@@ -1,6 +1,6 @@
 {
   "name": "gremio-2",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Gremio 2 — equipo de agentes de ingeniería para OpenCode, con tiers que evitan procesos pesados en cambios chicos",
   "type": "module",
   "scripts": {
