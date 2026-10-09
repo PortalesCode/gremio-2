@@ -8,9 +8,13 @@
  *   - `gremio_tier`: clasifica un cambio en su tier (0-3) y devuelve ruta,
  *     gates y el motivo. El Lead NO juzga el tier a mano.
  *
- * Ninguna ejecuta comandos: leen `.git/`, `package.json`, marcadores,
- * `opencode.json` y presencia de archivos/carpetas. Nunca lanzan: ante error
- * devuelven lo disponible.
+ * `gremio_estado` lee `.git/`, `package.json`, marcadores, `opencode.json`
+ * y presencia de archivos/carpetas. Además pide a git el RESUMEN de cambios
+ * pendientes (archivo + líneas +/-) y los últimos commits, para que el gate
+ * del Lead no dependa de un permiso de shell revocable.
+ *
+ * git se invoca con `execFileSync` (sin shell) y argumentos fijos: no hay
+ * interpretación de comandos. Ante cualquier error devuelve lo disponible.
  *
  * La lógica pura vive en `../lib/gremio-helpers` (testeable sin el runtime de
  * OpenCode). Este archivo solo arma las tools.
@@ -28,10 +32,11 @@ import {
   tieneTests,
   tieneCI,
   clasificarTier,
+  leerCambios,
 } from "../lib/gremio-helpers";
 
 const DESCRIPTION =
-  "Estado del proyecto para el Gremio: raíz, repo git (rama, remoto, commits), tablero, web app, herramientas encendidas y base del proyecto (tests, CI, README, CONTRIBUTING, licencia). Read-only, sin shell. Llamala al arrancar cada sesión.";
+  "Estado del proyecto para el Gremio: raíz, repo git (rama, remoto, commits), tablero, web app, herramientas encendidas, base del proyecto (tests, CI, README, CONTRIBUTING, licencia) y CAMBIOS PENDIENTES con líneas +/-, más los últimos commits. Llamala al arrancar y después de cada entrega: con eso cerrás el gate de tier 0 sin necesidad de correr shell.";
 
 const DESCRIPCION_TIER =
   "Clasifica un cambio en su tier de Gremio 2 (0-3) y devuelve ruta, gates y motivo. No juzgues el tier a mano: pasale los archivos que el ticket va a tocar y usá lo que devuelva. Bajar de tier exige justificación escrita en el ticket.";
@@ -83,6 +88,8 @@ export default {
             licencia: existsSync(join(raiz, "LICENSE")) || existsSync(join(raiz, "LICENSE.md")),
           };
 
+          const cambios = leerCambios(raiz);
+
           const avisos: string[] = [];
           if (!esGit) {
             avisos.push(
@@ -123,6 +130,7 @@ export default {
                 web_senales: web.senales,
                 herramientas,
                 base,
+                cambios,
                 aviso: avisos.length > 0 ? avisos.join(" ") : null,
               },
               null,

@@ -14,6 +14,8 @@ import {
   tieneCommits,
   clasificarRuta,
   clasificarTier,
+  leerCambios,
+  LIMITE_ARCHIVOS,
 } from "../.opencode/lib/gremio-helpers";
 
 const temporales: string[] = [];
@@ -290,5 +292,103 @@ describe("clasificarTier (el Lead no juzga: la funcion decide)", () => {
     for (const archivos of [[], ["a.ts"], ["a.ts", "b.ts"], ["package.json"]]) {
       expect(clasificarTier({ archivos }).motivo.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("leerCambios — el gate del Lead no depende de un permiso", () => {
+  // Comillas en los args con espacio: sin esto "primer commit" se parte en -m primer + path.
+  const g = (cwd: string, ...args: string[]) =>
+    execSync(`git ${args.map((a) => (/\s/.test(a) ? `"${a}"` : a)).join(" ")}`, {
+      cwd,
+      encoding: "utf-8",
+    });
+  const initRepo = (cwd: string) => {
+    g(cwd, "init", "-q", "-b", "main");
+    g(cwd, "config", "user.email", "t@t.t");
+    g(cwd, "config", "user.name", "t");
+  };
+
+  it("sin repo git no explota: disponible false y lista vacia", () => {
+    const r = leerCambios(crear({ "notas.txt": "hola" }));
+    expect(r.disponible).toBe(false);
+    expect(r.archivos).toEqual([]);
+    expect(r.sin_commits).toBe(true);
+  });
+
+  it("repo recien creado, sin cambios: total 0 y sin_commits true", () => {
+    const raiz = crear({});
+    initRepo(raiz);
+    const r = leerCambios(raiz);
+    expect(r.disponible).toBe(true);
+    expect(r.total).toBe(0);
+    expect(r.sin_commits).toBe(true);
+    expect(r.ultimos_commits).toEqual([]);
+  });
+
+  it("archivo modificado reporta estado y lineas + / -", () => {
+    const raiz = crear({ "a.txt": "uno\n" });
+    initRepo(raiz);
+    g(raiz, "add", "-A");
+    g(raiz, "commit", "-q", "-m", "init");
+    writeFileSync(join(raiz, "a.txt"), "uno\ndos\ntres\n", "utf-8");
+
+    const r = leerCambios(raiz);
+    expect(r.sin_commits).toBe(false);
+    expect(r.total).toBe(1);
+    expect(r.archivos[0].archivo).toBe("a.txt");
+    expect(r.archivos[0].estado).toBe("M");
+    expect(r.archivos[0].agregadas).toBe(2);
+    expect(r.archivos[0].borradas).toBe(0);
+  });
+
+  it("archivo nuevo sin seguimiento: ?? y lineas null (no inventar numeros)", () => {
+    const raiz = crear({});
+    initRepo(raiz);
+    g(raiz, "commit", "-q", "--allow-empty", "-m", "init");
+    writeFileSync(join(raiz, "nuevo.ts"), "x\n", "utf-8");
+
+    const r = leerCambios(raiz);
+    expect(r.archivos[0].archivo).toBe("nuevo.ts");
+    expect(r.archivos[0].estado).toBe("??");
+    expect(r.archivos[0].agregadas).toBeNull();
+    expect(r.archivos[0].borradas).toBeNull();
+  });
+
+  it("devuelve los ultimos commits (para el DoD commiteado)", () => {
+    const raiz = crear({ "a.txt": "1\n" });
+    initRepo(raiz);
+    g(raiz, "add", "-A");
+    g(raiz, "commit", "-q", "-m", "primer commit");
+    const r = leerCambios(raiz);
+    expect(r.sin_commits).toBe(false);
+    expect(r.ultimos_commits).toHaveLength(1);
+    expect(r.ultimos_commits[0]).toContain("primer commit");
+  });
+
+  it("trunca la lista y avisa, para no reventar el contexto", () => {
+    const raiz = crear({});
+    initRepo(raiz);
+    g(raiz, "commit", "-q", "--allow-empty", "-m", "init");
+    for (let i = 0; i < LIMITE_ARCHIVOS + 5; i++) {
+      writeFileSync(join(raiz, `f${i}.txt`), "x", "utf-8");
+    }
+    const r = leerCambios(raiz);
+    expect(r.archivos).toHaveLength(LIMITE_ARCHIVOS);
+    expect(r.total).toBe(LIMITE_ARCHIVOS + 5);
+    expect(r.truncado).toBe(true);
+  });
+
+  it("es resumen, no el diff completo: un cambio de 800 lineas no reventa el contexto", () => {
+    const raiz = crear({ "grande.ts": Array.from({ length: 400 }, (_, i) => `linea ${i}`).join("\n") });
+    initRepo(raiz);
+    g(raiz, "add", "-A");
+    g(raiz, "commit", "-q", "-m", "init");
+    writeFileSync(join(raiz, "grande.ts"), Array.from({ length: 800 }, (_, i) => `cambio ${i}`).join("\n"), "utf-8");
+
+    const r = leerCambios(raiz);
+    expect(JSON.stringify(r).length).toBeLessThan(500);
+    expect(r.archivos[0].agregadas).toBeGreaterThan(300);
+    expect(r.archivos[0].borradas).toBeGreaterThan(300);
+    expect(JSON.stringify(r)).not.toContain("cambio 0\n");
   });
 });

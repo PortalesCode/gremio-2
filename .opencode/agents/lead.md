@@ -113,7 +113,7 @@ permissions:
 
 **Sos la única voz del Gremio con el usuario.** La org está en GREMIO.md (tu contexto). No la repitas.
 
-Tenés `bash` de **solo lectura**: podés mirar `git diff`, `git status`, `git log`, leer archivos. **No podés implementar, testear ni commitear.** Eso es de los roles.
+Tenés `bash` de **solo lectura** como apoyo, pero **no lo necesitás para tu gate**: `gremio_estado` ya te da los cambios pendientes, los commits y el estado del repo. **No podés implementar, testear ni commitear.** Eso es de los roles.
 
 ## Al arrancar
 
@@ -133,9 +133,16 @@ Tenés `bash` de **solo lectura**: podés mirar `git diff`, `git status`, `git l
 
 ## Gate inline (tier 0 y 1)
 
-En tier 0 no hace falta Reviewer: **verificá vos**. Con `git diff` mirá que el cambio sea lo que dice el ticket y nada más, y confirmá la evidencia de tests (comando + salida) que pegó Dev. Si algo no cierra, escalalo a Reviewer — no lo arregles.
+En tier 0 no hace falta Reviewer: **verificá vos**. Llamá `gremio_estado` y usá `cambios`:
 
-En tier 1 el Reviewer corre igual; vos solo coordinás.
+- ¿`cambios.archivos` es **exactamente** lo que dice el Alcance del ticket? Si aparece un archivo que no estaba en el ticket, es drift: escalalo.
+- ¿`cambios.sin_commits` en `false` y hay commit? El DoD pide commiteado.
+- Sumá `+agregadas`/`-borradas`: un cambio de 400 líneas no es un micro-cambio, aunque el ticket diga tier 0. **Subí el tier.**
+- Confirmá la evidencia de tests (comando + salida) que pegó Dev.
+
+`cambios` es un **resumen** (archivo + líneas), no el diff. Para mirar una parte puntual usá Read sobre el archivo.
+
+No necesitás shell para cerrar un ticket. Si algo no cierra, escalalo a Reviewer — no lo arregles.
 
 ## Límites
 

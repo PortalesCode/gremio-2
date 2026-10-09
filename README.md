@@ -42,6 +42,41 @@ Podríamos recortarlo —`git *` allow cubre diez reglas— pero abriría permis
 
 Gremio 1 announcement sus cifras de contexto sobre el formato de permisos de **v1**, que en v2 directamente no aplica.
 
+## El gate no depende de un permiso
+
+El Lead cierra los tickets de tier 0 sin Reviewer. Para hacerlo necesita ver
+qué cambió. Podríamos haberle dado `shell`, pero **un gate que depende de un
+permiso revocable es frágil**: si OpenCode cambia el matching, o una regla
+global lo pisa, el tier 0 se rompe en silencio. Passó de verdad — un comando
+compuesto con un verbo no permitido tumba toda la cadena, y el Lead se quedó
+sin poder verificar sus propios tickets.
+
+Así que los datos van en la tool que ya se llama al arrancar:
+
+```jsonc
+"cambios": {
+  "disponible": true,
+  "total": 2,
+  "truncado": false,
+  "sin_commits": false,
+  "archivos": [
+    { "estado": "M", "archivo": "src/Boton.tsx", "agregadas": 12, "borradas": 3 }
+  ],
+  "ultimos_commits": ["a1b2c3d T-0007: agrega hash_password"]
+}
+```
+
+Eso le resuelve las tres cosas de un saque: **verificar el gate de tier 0**
+(¿los archivos son exactamente los del ticket?), **detectar drift antes de
+delegar**, y **confirmar el DoD commiteado** sin pedirle el hash a DevOps.
+
+Es un **resumen, no el diff**: en un cambio de 500 líneas el diff completo revienta
+el contexto. Para mirar una parte puntual está `Read`. La lista se trunca a 40
+archivos y avisa con `truncado`.
+
+El Lead igual conserva `shell` de solo lectura como apoyo, pero **no lo necesita
+para su gate**.
+
 ## El rediseño de permisos
 
 Gremio 1 tenía un agujero: cuatro de seis roles tenían `bash: allow`, que esquivaba por completo los `deny` de `edit`. Un Reviewer podía no editar código... y editarlo con `sed -i`. La disciplina era prosa, no máquina.

@@ -8,6 +8,7 @@
  */
 
 import { existsSync, readFileSync, readdirSync } from "fs";
+import { execFileSync } from "child_process";
 import { join } from "path";
 
 export const MARCAS_WEB = [
@@ -372,4 +373,117 @@ export function clasificarTier(e: EntradaTier): ResultadoTier {
   if (n === 1) return mk(0, "1 archivo, sin config ni infra");
   if (n <= 3) return mk(1, `${n} archivos, sin config ni infra`);
   return mk(2, `${n} archivos (>3)`);
+}
+
+/* ────────────────────────────────────────────────────────────────
+ * Cambios pendientes — el gate del Lead NO depende de un permiso.
+ *
+ * `git diff` detrás de un permiso revocable es un gate frágil: si
+ * OpenCode cambia el matching, o una regla global lo pisa, el tier 0
+ * se rompe en silencio. Estos datos salen de la misma tool que ya se
+ * llama al arrancar, asi que cerrar un ticket no cuesta nada nuevo.
+ *
+ * Se ejecuta git con `execFileSync` (SIN shell) y argumentos fijos:
+ * no hay interpretacion de comandos ni inyeccion posible. El resto
+ * del plugin sigue siendo solo-lectura de archivos.
+ * ──────────────────────────────────────────────────────────────── */
+
+/** Tope de archivos devueltos: un micro-cambio nunca llega a esto. */
+export const LIMITE_ARCHIVOS = 40;
+
+function git(raiz: string, args: string[]): string | null {
+  try {
+    return execFileSync("git", args, {
+      cwd: raiz,
+      encoding: "utf-8",
+      timeout: 5000,
+      stdio: ["ignore", "pipe", "ignore"],
+      maxBuffer: 4 * 1024 * 1024,
+    });
+  } catch {
+    return null;
+  }
+}
+
+export interface Cambio {
+  /** Codigo de git status: M modificado, A agregado, ?? sin seguimiento, D borrado... */
+  estado: string;
+  archivo: string;
+  /** Lineas agregadas/borradas. null si el archivo es nuevo o binario. */
+  agregadas: number | null;
+  borradas: number | null;
+}
+
+export interface EstadoCambios {
+  disponible: boolean;
+  archivos: Cambio[];
+  total: number;
+  truncado: boolean;
+  sin_commits: boolean;
+  ultimos_commits: string[];
+}
+
+/**
+ * Resumen de cambios pendientes: archivo + lineas +/-.
+ *
+ * Devuelve el RESUMEN, nunca el diff completo: en un cambio de 500
+ * lineas el diff completo revienta el contexto, y para el gate alcanza
+ * con saber que archivos se tocaron y cuanto se movio. Para ver una
+ * parte puntual esta el Read.
+ */
+export function leerCambios(raiz: string): EstadoCambios {
+  const vacio: EstadoCambios = {
+    disponible: false,
+    archivos: [],
+    total: 0,
+    truncado: false,
+    sin_commits: true,
+    ultimos_commits: [],
+  };
+
+  const status = git(raiz, ["status", "--porcelain"]);
+  if (status === null) return vacio;
+
+  // lineas +/- por archivo (solo trackeados)
+  const stats = new Map<string, { a: number | null; b: number | null }>();
+  const numstat = git(raiz, ["diff", "--numstat"]);
+  if (numstat !== null) {
+    for (const linea of numstat.split("\n")) {
+      if (!linea.trim()) continue;
+      const cols = linea.split("\t");
+      if (cols.length < 3) continue;
+      const archivo = cols.slice(2).join("\t");
+      stats.set(archivo, {
+        a: cols[0] === "-" ? null : Number(cols[0]),
+        b: cols[1] === "-" ? null : Number(cols[1]),
+      });
+    }
+  }
+
+  const archivos: Cambio[] = [];
+  let total = 0;
+  for (const linea of status.split("\n")) {
+    if (!linea.trim()) continue;
+    total++;
+    if (archivos.length >= LIMITE_ARCHIVOS) continue;
+    const archivo = linea.slice(3).trim();
+    const st = stats.get(archivo);
+    archivos.push({
+      estado: linea.slice(0, 2).trim() || "?",
+      archivo,
+      agregadas: st ? st.a : null,
+      borradas: st ? st.b : null,
+    });
+  }
+
+  const log = git(raiz, ["log", "--oneline", "-n", "5"]);
+
+  return {
+    disponible: true,
+    archivos,
+    total,
+    truncado: total > archivos.length,
+    sin_commits: log === null || log.trim() === "",
+    ultimos_commits: log === null ? [] : log.split("\n").filter(Boolean).slice(0, 5),
+  };
 }
